@@ -26,12 +26,12 @@ Go to project root directory and run the following command.
         sudo npm link   
 > (if node is not install as root user the no need to use sudo before command.)
   
- Go to home directory and move ".node-red" installtion directory and run the again same command above i.e.
+ Go to home directory and move to ".node-red" installtion directory and run the again same command above i.e.
 
         sudo npm link 
 > (if node is not install as root user no need to use sudo before command.)
  
- The above both 2 command will create a "symbolik link" between your node-red dashboard code and the actual node project which you were deveolping for node-red.
+ The above both 2 command will create a "symbolic link" between your node-red dashboard code and the actual node project which you were deveolping for node-red.
  Each time when you make any new changes in you node project code, you just need to restart you node-red server and will get the updated output in node-red dashboard.
     
 ###### Installation on live node-red
