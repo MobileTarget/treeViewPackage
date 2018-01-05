@@ -2,7 +2,7 @@
   "name": "tree_view",
   "version": "0.0.1",
   "description": "Custom treeView strcture of data saved into cloudantDb for Dri-list application.",
-  "main": "index.js",
+  "main": "treeView/treeView.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
