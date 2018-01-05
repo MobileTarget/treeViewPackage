@@ -22,7 +22,6 @@ module.exports = function(RED) {
 							msg.payload = `Either username or password should not empty to make ${node.type} node working properly.`;
 							node.send(msg);	
 						}else{
-							msg.method = "get";
 							httpRequestCall(msg, function(err, data){
 								if(err) {
 									node.send(err);
@@ -46,7 +45,13 @@ module.exports = function(RED) {
 			timeout: 30000 , //if the response not comes in 30sec axios will abort the request;
 			url: msg.dbUrl, // cloudant database url for views, query's 
 			method: msg.method //method used to communicate with cloudant database i.e get,post,put,delete,patch
-		}; 
+		};
+		
+		if(msg.method.toUpperCase() == "GET") {
+			config.params 	= msg.payload || {};
+		}else{
+			config.data 	= { "docs": msg.payload };
+		}
 		
 		axios
 		.request(config)
@@ -55,7 +60,24 @@ module.exports = function(RED) {
 			msg.payload = response.data;
 			callback(null, msg);
 		}).catch(function(exception){
-			msg.payload = exception ;
+			if (exception.response) {
+				// The request was made and the server responded with a status code
+				// that falls out of the range of 2xx
+				console.log(exception.response.data);
+				console.log(exception.response.status);
+				console.log(exception.response.headers);
+				msg.payload = exception.response ;
+			} else if (exception.request) {
+				// The request was made but no response was received
+				// `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+				// http.ClientRequest in node.js
+				console.log(exception.request);
+				msg.payload = exception.request ;
+			} else {
+				// Something happened in setting up the request that triggered an Error
+				console.log('Error', exception.message);
+				msg.payload = exception.message ;
+			}
 			callback(null, msg);
 		});
 	}
