@@ -3,7 +3,7 @@ module.exports = function(RED) {
 		RED.nodes.createNode(this, config);
 		var node = this;
 		node.on('input', function(msg) {
-            var payload = msg.payload;
+            var payload = msg.payload; 
             msg.payload = " Tree view node output :- " + payload ;
 			node.send(msg);
 		});
