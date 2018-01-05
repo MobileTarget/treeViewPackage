@@ -1,0 +1,22 @@
+{
+  "name": "tree_view",
+  "version": "0.0.1",
+  "description": "Custom treeView strcture of data saved into cloudantDb for Dri-list application.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MobileTarget/treeViewPackage.git"
+  },
+  "keywords": [
+    "node-red"
+  ],
+  "author": "Roger Colburn",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MobileTarget/treeViewPackage/issues"
+  },
+  "homepage": "https://github.com/MobileTarget/treeViewPackage#readme"
+}
