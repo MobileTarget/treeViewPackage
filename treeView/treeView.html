@@ -1,0 +1,33 @@
+<script type="text/javascript">
+    RED.nodes.registerType('Tree View',{
+        category: 'Tree View',
+        color: '#C7E9C0',
+        defaults: {
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:1,
+        icon: "treeView.png",
+        label: function() {
+            return this.name||"Tree view";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="Tree View">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topic"><i class="icon-tag"></i> Topic</label>
+        <input type="text" id="node-input-topic" placeholder="Topic">
+    </div>
+</script>
+ 
+<script type="text/x-red" data-help-name="Tree View">
+    <p>Custom treeView strcture of data saved into cloudantDb for Dri-list application.<br/></p>
+    <h3>Details</h3>
+    <p>Some more information about the node. plz vist the following link</p>
+    <a href="https://github.com/MobileTarget/treeViewPackage">Tree view github</a>
+</script>
