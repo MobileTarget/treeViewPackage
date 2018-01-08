@@ -3,31 +3,113 @@
         category: 'Tree View',
         color: '#C7E9C0',
         defaults: {
-            name: {value:""}
+            host    : {value: "", required: true },
+            database: { value:"", required:true },
+            username : { value:"", required:true },
+            password  : { value:"", required:true },
+            operation  : { value:"", required: true}
         },
         inputs:1, 
         outputs:1,
         icon: "treeView.png",
         label: function() {
-            return this.name||"Tree view";
+            return "Tree view";
         }
     });
 </script>
 
 <script type="text/x-red" data-template-name="Tree View">
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
+        <label for="node-input-name"><i class="fa fa-bookmark"></i> Host</label>
+        <input type="text" id="node-input-host" placeholder="Host">
+    </div>
+     <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Database</label>
+        <input type="text" id="node-input-database" placeholder="Database">
     </div>
     <div class="form-row">
-        <label for="node-input-topic"><i class="icon-tag"></i> Topic</label>
-        <input type="text" id="node-input-topic" placeholder="Topic">
+        <label for="node-input-name"><i class="fa fa-user"></i> Username</label>
+        <input type="text" id="node-input-username" placeholder="Username">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-lock"></i> Password</label>
+        <input type="password" id="node-input-password" placeholder="Password">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topic"><i class="fa fa-wrench"></i> Operation</label>
+        <select type="text" id="node-input-operation" style="width:68%;">
+            <option value="null">Select</option>
+            <option value="all">All</option>
+            <option value="insert">Save</option>
+            <option value="search">Search</option>
+            <option value="delete">Delete</option>
+        </select>
     </div>
 </script>
  
 <script type="text/x-red" data-help-name="Tree View">
     <p>Custom treeView strcture of data saved into cloudantDb for Dri-list application.<br/></p>
     <h3>Details</h3>
+    <p>
+        The <b>database name</b> must follow these rules:
+        <ul>
+            <li>No spaces</li>
+            <li>All letters in small caps</li>
+            <li>The first character can't be <code>_</code></li>
+        </ul>
+    </p>
+    
+    <p>
+        Your document should avoid having top-level fields that start with
+        <code>_</code>, with exceptions for <code>_id</code>, <code>_rev</code>
+        and other <a href="https://wiki.apache.org/couchdb/HTTP_Document_API#Special_Fields">
+        CouchDB reserved words</a>.
+    </p>
+    <p>
+        Searching for documents can be done in three modes: directly by using the
+        document's <b>_id</b>, by using an existing <a
+        href="https://cloudant.com/for-developers/search/" target="_blank">Search
+        Index</a> or retrieving <b>all documents</b> stored in your database.
+    </p>
+    <p>
+        When querying using the <b>_id</b> option, the value for the document's
+        <code>_id</code> should be passed in the <code>msg.payload</code> as a
+        string.
+    </p>
+    <p>
+        To use an existing <b>Search Index</b> stored on the desired database,
+        the query argument should be passed on the <code>msg.payload</code> as a
+        string following the <code>indexName:value</code> pattern. Keep in mind
+        that <i>the index must be created beforehand in the database.</i> and
+        referenced here by its <code>design document/index name</code>.
+    </p>
+    <p>
+        When querying using a <b>Search Index</b> you can pass the search
+        parameters as an object in <code>msg.payload</code>.
+    </p>
+    <p>
+        For example, you can pass an object like this:
+    <p>
+        <code>{ query: "abc*", limit: 100 }</code>
+    </p>
+    <p>
+        to change the value of <code>limit</code>. You can find more information
+        about <b>Search Index</b> parameters in the <a
+        href="https://docs.cloudant.com/api.html?http#queries" target="_blank">
+        official Cloudant documentation</a>.
+    </p>
+    <p>
+        The last method to retrieve documents is to simply get all of them by
+        selecting the option <b>all documents</b>.
+    </p>
+    <p>
+        The <b>database name</b> must follow these rules:
+        <ul>
+            <li>No spaces</li>
+            <li>All letters in small caps</li>
+            <li>The first character can't be <code>_</code></li>
+        </ul>
+    </p>
     <p>Some more information about the node. plz vist the following link</p>
     <a href="https://github.com/MobileTarget/treeViewPackage">Tree view github</a>
 </script> 

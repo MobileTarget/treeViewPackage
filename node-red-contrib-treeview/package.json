@@ -25,6 +25,10 @@
   "homepage": "https://github.com/MobileTarget/treeViewPackage#readme",
   "dependencies": {
     "axios": "^0.17.1",
-    "underscore": "^1.8.3"
+    "cloudant": "^1.10.0",
+    "mongoid-js": "^1.1.3",
+    "querystring": "^0.2.0",
+    "underscore": "^1.8.3",
+    "url": "^0.11.0"
   }
 }
