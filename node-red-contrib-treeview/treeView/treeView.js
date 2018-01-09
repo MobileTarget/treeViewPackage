@@ -64,7 +64,7 @@ module.exports = function(RED) {
 									break;
 								
 								case "insert":
-									saveRecordIntoDatabase(dbInstance, database, node, msg, config);
+									saveRecordIntoDatabase(dbInstance, database, node, msg);
 									break;
 								
 								case "search":

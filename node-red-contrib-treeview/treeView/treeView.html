@@ -58,7 +58,6 @@
             <li>The first character can't be <code>_</code></li>
         </ul>
     </p>
-    
     <p>
         Your document should avoid having top-level fields that start with
         <code>_</code>, with exceptions for <code>_id</code>, <code>_rev</code>
@@ -66,10 +65,14 @@
         CouchDB reserved words</a>.
     </p>
     <p>
-        Searching for documents can be done in three modes: directly by using the
-        document's <b>_id</b>, by using an existing <a
-        href="https://cloudant.com/for-developers/search/" target="_blank">Search
-        Index</a> or retrieving <b>all documents</b> stored in your database.
+        Fetching documents can be done in two modes: directly by using the
+        document's <b>_id</b>, or retrieving <b>all documents</b> stored in your database.
+        1) To fetch document by <b>_id</b> you need to select <b>"Operation"</b> as fetch and
+        need to add <b>"mode"</b> property in msg object for <b>e.g: msg.mode = "byId"</b> <br/>
+        2) To fetch document by cloudant <b>_designs</b> search filters for which you need to follow the following
+        <a href="https://cloudant.com/for-developers/search/" target="_blank">link</a>.<br/>
+        3) To fetch all document stored into database i.e default limit is enable to fetch all record is 200 and you need
+        to set the <b>"mode"</b> property of "msg" object to "all" i.e. <b>msg.mode = "all"</b>.<br/>
     </p>
     <p>
         When querying using the <b>_id</b> option, the value for the document's
@@ -77,39 +80,31 @@
         string.
     </p>
     <p>
-        To use an existing <b>Search Index</b> stored on the desired database,
-        the query argument should be passed on the <code>msg.payload</code> as a
-        string following the <code>indexName:value</code> pattern. Keep in mind
-        that <i>the index must be created beforehand in the database.</i> and
-        referenced here by its <code>design document/index name</code>.
-    </p>
-    <p>
-        When querying using a <b>Search Index</b> you can pass the search
-        parameters as an object in <code>msg.payload</code>.
-    </p>
-    <p>
-        For example, you can pass an object like this:
-    <p>
-        <code>{ query: "abc*", limit: 100 }</code>
-    </p>
-    <p>
-        to change the value of <code>limit</code>. You can find more information
-        about <b>Search Index</b> parameters in the <a
-        href="https://docs.cloudant.com/api.html?http#queries" target="_blank">
-        official Cloudant documentation</a>.
-    </p>
-    <p>
         The last method to retrieve documents is to simply get all of them by
         selecting the option <b>all documents</b>.
     </p>
-    <p>
-        The <b>database name</b> must follow these rules:
-        <ul>
-            <li>No spaces</li>
-            <li>All letters in small caps</li>
-            <li>The first character can't be <code>_</code></li>
-        </ul>
-    </p>
+    
+    <hr/>
+    
+    <p>Searching document can be done in tow modes:
+    1) To search data by using search/filters index stored into database.
+    by using an existing <a href="https://cloudant.com/for-developers/search/" target="_blank">Search Index</a>
+    To use an existing <b>Search Index</b> stored on the desired database,
+    the query argument should be passed on the <code>msg.payload</code> as a
+    string following the <code>indexName:value</code> pattern. Keep in mind
+    that <i>the index must be created beforehand in the database.</i> and
+    referenced here by its <code>design document/index name</code>. </p>
+    <p> When querying using a <b>Search Index</b> you can pass the search parameters as an object in <code>msg.payload</code>. </p>
+    <p> For example, you can pass an object like this: <p> <code>{ query: "abc*", limit: 100 }</code> </p>
+    
+    <p> to change the value of <code>limit</code>. You can find more information about <b>Search Index</b> parameters in the
+    <a href="https://docs.cloudant.com/api.html?http#queries" target="_blank"> official Cloudant documentation</a>. </p><br/>
+    <strong>Note: To use cloudantDb design filter need to add "mode" property value in msg object. i.e "msg.mode" = "searchFilter"</strong>  <br/><br/>
+    2) To search data by using the cloudant query method.
+    For more information please visit the following link.
+    <a target="_blank" href="https://examples.cloudant.com/docs-examples/_design/couchapp/api/search.html">Cloudant search query</a><br/><br/>
+    
+    <strong>Note: To use cloudantDb design filter need to add "mode" property value in msg object. i.e "msg.mode" = "searchQuery"</strong><br/>
     <p>Some more information about the node. plz vist the following link</p>
     <a href="https://github.com/MobileTarget/treeViewPackage">Tree view github</a>
 </script> 
