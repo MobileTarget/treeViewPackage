@@ -428,17 +428,12 @@ module.exports = {
                 }
             }
             
-            if (!return_object.error && node_object.node_name!=node_name)						// if it is a rename
-            {
+            if (!return_object.error && node_object.node_name!=node_name){						// if it is a rename
                 if (debug==1) console.log(node_name);
                 return_object=rename_node(user_id, node_object, node_name, previous_object);	// done -- no more processing needed
-            }
-            else if (node_sent_in) 																// if node sent in assume there is children to fix
-            {
+            }else if (node_sent_in) {																// if node sent in assume there is children to fix
                 return_object = process_tree(previous_object, "add", node_object);
-            }
-            else
-            {
+            }else{
                 return_object = save_node(node_object);											// simple save
             }
         }
@@ -563,47 +558,49 @@ module.exports = {
                     
                 }
     
-                if (debug==1) console.log({node_object:node_object})
+                if (debug==1) console.log({node_object:node_object});
                 // if current record's parent refers to record being renamed then deal with, we do this AFTER external call
-                if (add_object._id != previous_object._id) 
-                {
-                    var index = node_object.parents.indexOf(previous_object._id)
-                    if (index > -1) 
-                    {
-                        node_object.parents.splice(index, 1);
-                        if (add_object._id && node_object.parents.indexOf(add_object._id) < 0) {node_object.parents.push(add_object._id)};	
+                if (add_object._id != previous_object._id){
+                    var local_index = node_object.parents.indexOf(previous_object._id);
+                    if (local_index > -1) {
+                        node_object.parents.splice(local_index, 1);
+                        if (add_object._id && node_object.parents.indexOf(add_object._id) < 0) node_object.parents.push(add_object._id);	
                     }
                 }
     
                 // this should apply only to add object and to undo if (add_object._id != previous_object._id) 2nd above
-                var index = node_object.ancestors.indexOf(node_object._id)
-                if (index > -1) {node_object.ancestors.splice(index, 1)};
+                var index = node_object.ancestors.indexOf(node_object._id);
+                if (index > -1) node_object.ancestors.splice(index, 1);
     
                 //if (node_object._id == add_object._id) {console.log({HEREHERERERERERER:node_object})};
                 //if (!history_object) {console.log("*********************** ERROR"); console.log(JSON.parse(JSON.stringify(node_object)))};
     
-                if (history_object && node_object._id != add_object._id) {node_object.history.push(history_object)};
+                if (history_object && node_object._id != add_object._id) node_object.history.push(history_object);
     
-                if (mode=="del")											// if parents length = 0 and delete then add to delete 
-                { 
+                if (mode=="del") { 											// if parents length = 0 and delete then add to delete 
                     var empty=true;
-                    for (var key in external_lineage)
-                    {
-                        if (external_lineage.hasOwnProperty(key))
-                        {
-                            if (external_lineage[key].length!=0){empty=false; break};									
+                    for (var local_key in external_lineage){
+                        if (external_lineage.hasOwnProperty(local_key)){
+                            if (external_lineage[local_key].length!=0){
+                                empty=false;
+                                break;
+                            }									
                         }
                     }
-                    if (empty){delete_records.push(node_object)}else{update_records.push(node_object)}
-                }
-                else
-                {
+                    if (empty){
+                        delete_records.push(node_object);
+                    }else{
+                        update_records.push(node_object);
+                    }
+                }else{
                     update_records.push(node_object);
                 }
             }
         }
     
-        if (!return_object.error) {return_object={delete_records:delete_records, update_records:update_records};};
+        if (!return_object.error) {
+            return_object={delete_records:delete_records, update_records:update_records};
+        }
         return return_object;
     },
     generate_external_lineage: function(record, external_object, auth_data_id){
