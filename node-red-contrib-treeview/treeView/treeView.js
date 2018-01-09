@@ -4,9 +4,13 @@ module.exports = function(RED) {
 		CloudantDriver	= require('cloudant'),
 		helper			= require('./treeViewHelper'),
 		_	  			= require('underscore');
-	
+			
 	function treeView(config) {
 		RED.nodes.createNode(this, config);
+		
+		//initalizing helper init method
+		helper.init();
+		
 		var node 			= this ,
 			retryAttempts	= 3,
 			account			= "" ,
@@ -143,6 +147,40 @@ module.exports = function(RED) {
 		
 		function deleteRecordFromDatabase(cloudant, db, node, msg){
 			msg.payload = "Inside deleteRecordFromDatabase function declaration.";
+			node.send(msg);
+		}
+		
+		function processMessageTreeViewMethod(cloudant, db, node, msg){
+			var action_array = msg.payload, result_array = [];
+			
+			if(!_.isArray(action_array)){
+				node.error("Failed to process message tree view. 'msg.payload' must be of valid javascript array.");
+				return false;	
+			}
+			
+			if(_.isEmpty(action_array)) {
+				node.error("Failed to process message tree view.Please check msg.payload object.");
+				return false;
+			}
+			_.map(action_array, (obj)=>{
+				if (obj.fn_name	=== "add_to_node_name_tree") {
+					result_array.push( helper.add_to_node_name_tree.apply(obj.payload) );
+				}
+				
+				if (obj.fn_name	===	"get_node_name_tree") {
+					result_array.push( helper.get_node_name_tree.apply(obj.payload) );
+				}
+				
+				if (obj.fn_name	===	"get_page") {
+					result_array.push( helper.get_page.apply(obj.payload) );
+				}
+				
+				if(obj.fn_name === "delete_from_node_name_tree"){
+					result_array.push( helper.delete_from_node_name_tree.apply(obj.payload) );
+				}
+			});
+			msg.payload = {result: result_array};
+			
 			node.send(msg);
 		}
 	}
