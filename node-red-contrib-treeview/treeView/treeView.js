@@ -1,6 +1,7 @@
 module.exports = function(RED) {
 	var	treeViewHelper	= require('./treeViewHelper'),
 		database		= require('./database'),
+		testData		= require('./test_data'),
 		_	  			= require('underscore');
 			
 	function treeView(config) {
@@ -10,12 +11,12 @@ module.exports = function(RED) {
 			host 			= config.host,
 			databaseName	= config.database,
 			username		= config.username,
-			password		= config.password;
+			password		= config.password,
+			partialFlag		= config.flag ;
 			
 		//initalizing helper init method
 		treeViewHelper.init();
 		database.init(databaseName, username, password);
-		
 	
 		node.on('input', function(msg) {
 			if(_.isEmpty(host)){
@@ -33,17 +34,16 @@ module.exports = function(RED) {
 				node.send(msg);	
 			}
 			
-			
-			//database.resetDatabase(function(data){
-			//	msg.payload = data;
-			//	node.send(msg);
-			//});
+			if(_.isEmpty(partialFlag)){
+				msg.payload = `Partial Flag value must be either true or false for ${node.type} node working properly.`;
+				node.send(msg);	
+			}
 			
 			var localMsg = {},
 				action_array = [],
 				count=0,
 				init_load = msg.payload;
-		
+				
 			for (var each_record in init_load) {
 				if(init_load[each_record]){
 					var record = init_load[each_record];
@@ -63,16 +63,53 @@ module.exports = function(RED) {
 					count++;
 				}
 			}
-			//console.log(">>>>>>>>>>>>>>>>>>> treeViewHelper.js", treeViewHelper.process_msg);
-			treeViewHelper.process_msg(action_array, function(return_object){
-				console.log(return_object);
-				msg.payload = return_object;
-				node.send(msg);
+			
+			// changeing true/false string to boolean value;
+			partialFlag = JSON.parse(partialFlag);
+			
+			reset_db_new(partialFlag, function(return_object1){
+				treeViewHelper.process_msg(action_array, function(return_object){
+					console.log(return_object);
+					msg.payload = return_object;
+					node.send(msg);
+				});
 			});
+			
 		});
+		
+		function reset_db_new(partialFlag, callback){
+			var node_original = {};
+			if (partialFlag) {
+				node_original = testData.node_original1;
+			} else {
+				node_original=Object.assign(testData.node_original1, testData.node_original2);
+			} 
+			// delete cloudant database
+			database.resetDatabase(function(obj){
+				if(obj.isReset){
+					//debugger;
+					nodes = [];
+					for (var each_record in node_original) {
+						if(node_original[each_record]){
+							nodes.push(node_original[each_record]);
+						}
+					}
+					treeViewHelper.save_array(nodes, callback);
+				}else{
+					nodes = [];
+					for (let each in node_original) {
+						if(node_original[each]){
+							nodes.push(node_original[each]);
+						}
+					}
+					treeViewHelper.save_array(nodes, callback);
+				}
+			});
+		}
 	}
 	
 	//Register function to Node-red nodes
 	RED.nodes.registerType("Tree View", treeView);
+	
 };
 

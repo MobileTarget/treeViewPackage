@@ -13,9 +13,11 @@ var treeObject = {
 	},
 	// actions_array array of msg with keys fn_name & payload
 	// result_array optional (add the results of the actions to result_array and return it)
+
 	process_msg: function(action_array, callback, result_array) {
 		//debug=2;
-        //console.log("going to log the self variable >>>", self);
+        var count = 0;
+
 		if (!result_array) result_array = []; // if no existing results sent in then create instance result_array (i.e. first call into process_msh)
 
 		if (action_array.length != 0) {
@@ -40,10 +42,13 @@ var treeObject = {
 
 			// now remove that action (item 0) from action array, action_array is now smaller
 			action_array.splice(0, 1);
-            
+
 			// create callback function for what should happen after the current action 
 			var call_fn = function(res) {
-				console.log("inside the call_fn >>>>>>", res);
+				console.log(count);
+				console.log({result: res});
+				//console.log(JSON.parse(JSON.stringify(node_records)));
+				count++;
 				// res will be the result from the call
 				// push it into current result_array
 				result_array.push(res);
@@ -64,7 +69,6 @@ var treeObject = {
 
 			// call the current action fn in msg.fn
 			// the original call includes call_fn which will send current result array and smaller action array back to recurse
-            //console.log(">>>>>>>>>>>>>>>>", msg);
 			msg.fn_name.apply(null, msg.payload);
 		} else {
 			callback(null, error_definitions.error_empty); // we need at least one action to be sent in
@@ -235,7 +239,7 @@ var treeObject = {
 					callback({"result": data});
 				});
 			}else{
-				if (debug == 2) console.log(return_object);
+				if (debug == 1) console.log(return_object);
 				callback({"result": data});	
 			}
 		} else {
@@ -252,7 +256,7 @@ var treeObject = {
 					}
 				}
 			}
-			if (debug == 2) console.log(return_object);
+			if (debug == 1) console.log(return_object);
 			callback(return_object);
 		}
 	},
@@ -342,7 +346,7 @@ var treeObject = {
 				query.selector.user_id = user_id ;
 			}
 			
-			//console.log(">>>>>>>>>>>>>>>>>>>>>>>> search_tree_deep", query);
+			console.log(">>>>>>>>>>>>>>>>>>>>>>>> search_tree_deep", query);
 			db.searchRecordsFromDatabase(query, function(return_array){
 				//if (debug == 2) console.log(arguments);
 				//var return_array = [];
@@ -430,7 +434,7 @@ var treeObject = {
 				query = query2 ;
 				console.log(">>>>>", query);
 			}
-			//console.log("............ query ", query, JSON.stringify(query));
+			console.log("............ query ", query, JSON.stringify(query));
 			//return false;
 			db.searchRecordsFromDatabase(query, function(return_object){
 				if (debug == 2) {
@@ -469,29 +473,82 @@ var treeObject = {
 						node_records[each_record].data_id_lineage[authorizing_id] &&
 						node_records[each_record].parents.indexOf(creator_node_id) >= 0 // else parent//&&
 					)) {
-				// if ((!parent_flag &&
-				// 		(!parent_node_name || node_records[each_record].node_name == parent_node_name) &&
-				// 		node_records[each_record].table == "node" &&
-				// 		node_records[each_record].node_name != node_name && // else grand
-				// 		node_records[each_record].user_id == authorizing_id &&
-				// 		node_records[each_record].data_id == authorized_id &&
-				// 		node_records[each_record].data_id_lineage[authorizing_id]
-				// 	) || (
-				// 		parent_flag &&
-				// 		(!parent_node_name || node_records[each_record].node_name == parent_node_name) &&
-				// 		node_records[each_record].table == "node" &&
-				// 		node_records[each_record].node_name != node_name && // else grand
-				// 		node_records[each_record].user_id == authorizing_id &&
-				// 		node_records[each_record].data_id == authorized_id &&
-				// 		node_records[each_record].data_id_lineage[authorizing_id] 
-				// 		//node_records[each_record].parents.indexOf(creator_node_id) >= 0 // else parent//&&
-				// 	)) {
 					var newObject = JSON.parse(JSON.stringify(node_records[each_record]));
 					return_object = {
 						"result": newObject
 					};
 					break;
 				}
+			}
+			callback(return_object);
+		}
+	},
+
+	// get records where data_id_lineage[parent_user_id] & user_id = parent_user_id & data_id= child_user_id
+	get_data_id_lineage: function(child_data_id, parent_user_id, filter, callback) {
+		if (environment=="nodered"){
+			var temp = {};
+			
+			temp[parent_user_id] = "$exists";
+			//data_id_lineage
+			var query = {
+				"selector": {
+					"table": "node",
+					"user_id": parent_user_id,
+					"data_id_lineage": temp 
+				}
+			};
+			
+			if(!child_data_id) {
+				query.selector.data_id = child_data_id;
+			}
+			
+			db.searchRecordsFromDatabase(query, function(return_object){
+				if (debug == 2) {
+					console.log(arguments);
+				}
+				
+				if( Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length == 1){
+					callback({ "result": return_object[0] });	
+				}else{
+					callback(error_definitions.error_empty);
+				}
+			});
+		}
+		else {
+			if (debug==1) console.log({get_data_id_lineage: filter});
+			var return_object = {};
+			var return_array = [];
+			var found = false;
+			for (var each_record in node_records) {
+				if ((node_records[each_record].table == "node") &&
+					(!child_data_id ||  node_records[each_record].data_id == child_data_id) &&
+					(node_records[each_record].data_id_lineage && node_records[each_record].data_id_lineage[parent_user_id]) &&
+					(node_records[each_record].user_id == parent_user_id)){
+
+					if (filter && filter.length!=0){
+						if (debug==1) console.log(node_records[each_record].data_id_lineage);
+						for (var each_item in filter){
+							if (debug==1) console.log(filter[each_item]);
+							if (node_records[each_record] &&
+								node_records[each_record].data_id_lineage[system_id].indexOf(filter[each_item])>-1){
+								if (debug==1) console.log("found");
+								found=true; 
+								break;
+						}
+						}
+					}
+					if (!filter || found) {
+						return_array.push(JSON.parse(JSON.stringify(node_records[each_record])));
+						if (debug==1) console.log(return_array);
+					}
+				}
+			}
+			if (debug==1) console.log(return_array);
+			if (return_array.length==0){
+				return_object=error_definitions.error_empty;
+			} else {
+				return_object = {"result": return_array};
 			}
 			callback(return_object);
 		}
@@ -706,13 +763,13 @@ var treeObject = {
 
 	add_date: function(hist_user_id, node_object) {
 		if (!node_object.history) {
-			node_object.history = [];
-		}
+			node_object.history = []
+		};
 		var temp = {};
 		temp.user_id = hist_user_id;
 		temp.date = new Date().toISOString();
-		node_object.history.push(temp);
-		return node_object;
+		node_object.history.push(temp)
+		return node_object
 	},
 	generate_external_lineage: function(record, external_object, auth_data_id) {
 		var return_object = {},
@@ -799,14 +856,19 @@ var treeObject = {
 		return return_object;
 	},
 	subtract_lineage: function(obj1, obj2) {
-		var return_object = {};
+		if (debug==1){console.log(obj1)}
+		if (debug==1){console.log(obj2)}
+		var return_object = {};//JSON.parse(JSON.stringify(obj1));
 		for (var key in obj1) {
-			if (obj1.hasOwnProperty(key) && obj2.hasOwnProperty(key)) { //console.log(obj1)
-				return_object[key] = obj1[key].filter(x => obj2[key].indexOf(x) < 0);
-			} else {
-				return_object[key] = [];
+			if (obj1.hasOwnProperty(key)){
+				if (obj2.hasOwnProperty(key)) { 
+					return_object[key]= obj1[key].filter(x => obj2[key].indexOf(x) < 0);
+				} else {
+					return_object[key] = obj1[key]
+				}
 			}
 		}
+		if (debug==1){console.log(return_object)}
 		return return_object;
 	},
 	update_tree_lineage: function(tree_array, external_object, mode, add_object, previous_object, auth_data_id) {
@@ -863,6 +925,7 @@ var treeObject = {
 
 		for (var each_record in tree_array) {
 			node_object = tree_array[each_record];
+			//if (node_object.data_id=="8e3384889429685de23b3b4226f13685"){debug=1}
 
 			if (mode == "del") {
 				// if external ancestors 1,2,3,4,5 and node parents 1,6 for del we want final node parents to be 1
@@ -914,6 +977,7 @@ var treeObject = {
 						node_object.data_id_lineage[key] = this.arrayUnique(node_object.data_id_lineage[key].concat(include_lineage[key]).filter(function(x) {
 							return exclude_lineage[key].indexOf(x) < 0;
 						}).concat(external_lineage[key]));
+						if (node_object.data_id_lineage[key].length==0){delete node_object.data_id_lineage[key]}
 					}
 
 				}
@@ -971,6 +1035,7 @@ var treeObject = {
 				return_object: return_object
 			});
 		}
+		//debug=0;
 		return return_object;
 	},
 	get_and_process_children: function(previous_object, mode, add_object, callback) {
@@ -1071,6 +1136,7 @@ var treeObject = {
 				delete_records = return_object.delete_records;
 				update_records = return_object.update_records;
 				if (debug == 1) console.log(update_records);
+				//debug=0
 				if (delete_records.length > 0) {
 					self.delete_array(delete_records, function(return_object) {
 						if (!return_object.error && update_records.length > 0) {
@@ -1165,7 +1231,7 @@ var treeObject = {
 				if (remove_nodename_id_flag) {
 					new_node_name = null;
 				}
-				var parents = arrayUnique(concat(include_parents).filter(x => remove_parents.indexOf(x) < 0));
+				var parents = this.arrayUnique(concat(include_parents).filter(x => remove_parents.indexOf(x) < 0));
 				self.create_edit_node(user_id, node_id, new_data_id, parents, new_node_name, auth_data_id, hist_user_id, null, callback);
 			} else {
 				callback(return_object);
@@ -1173,6 +1239,7 @@ var treeObject = {
 		});
 	},
 	create_edit_node: function(user_id, node_id, data_id, parents, node_name, auth_data_id, hist_user_id, data_id_plus, callback) {
+	    //if (node_id=="get_pagef1b5ed9577f69c6b131d94a46b39044f"){debug=1}
 		if (debug == 1) {
 			console.log(arguments)
 		}
@@ -1200,23 +1267,75 @@ var treeObject = {
 				if (return_object.result) {
 					previous_object = return_object.result; // keep a copy on how the node used to look
 					node_object = JSON.parse(JSON.stringify(previous_object));
-
 					if (debug == 1) console.log(JSON.parse(JSON.stringify(node_object)));
+					if (debug == 1) console.log(JSON.parse(JSON.stringify(node_object)));
+
+					if (debug == 1) console.log(data_id_plus);
+					//node_object.data_id_lineage = Object.assign(node_object.data_id_lineage, data_id_plus);
+					if (data_id_plus!={}){
+						for (var each_data_lienage in node_object.data_id_lineage) {
+							if (node_object.data_id_lineage.hasOwnProperty(each_data_lienage)) {
+								for (var each_data_id_plus in data_id_plus){
+									 if (data_id_plus.hasOwnProperty(each_data_id_plus) && each_data_lienage==each_data_id_plus)
+									 {
+										node_object.data_id_lineage[each_data_lienage]=self.arrayUnique(data_id_plus[each_data_id_plus],
+																							node_object.data_id_lineage[each_data_lienage])
+									} 
+								}
+							}
+						}
+					}
+
+					if (data_id){
+						node_object.data_id_lineage.data_id=[data_id];
+						//if (node_object.data_id_lineage.data_id.indexOf(data_id)<0) {node_object.data_id_lineage.data_id.push(data_id)};
+						node_object.data_id = data_id;	
+					}else {
+						node_object.data_id_lineage.data_id=[]
+					};
+						
+
+					if (debug == 1) console.log(node_object.data_id_lineage);
+
+					//node_object.data_id = data_id;
+					node_object = self.add_date(hist_user_id, node_object);
+					//if (data_id){node_object.data_id_lineage.data_id=[data_id]}else{node_object.data_id_lineage.data_id=[]}
 
 					// check to see existing parents are exacly like incoming parents
 					parents_same = (previous_object.parents.length == parents.length) && previous_object.parents.every(function(element, index) {
 						return element === parents[index];
 					});
-					if (data_id) data_id_plus.data_id = [data_id];
-					else data_id_plus.data_id = [];
 
-					node_object.data_id_lineage = data_id_plus;
-					node_object.data_id = data_id;
-					//if (data_id){node_object.data_id_lineage.data_id=[data_id]}else{node_object.data_id_lineage.data_id=[]}
-					node_object.parents = parents; // set node_object.parents
-					node_object.ancestors = parents; // gut ancestors, call to update_tree_lineage will replentish   
-					node_object = self.add_date(hist_user_id, node_object);
+					if (!parents_same) {						// if !parents_same then force update_tree_lineage to replentish  
+						node_object.parents = parents; 			// set node_object.parents to incoming parents
+						node_object.ancestors = parents; 		// gut ancestors, will be replentished
+					}											// else keep what was there 
+					else
+					{
+						if (data_id && node_object.data_id_lineage.data_id.indexOf(data_id)<0) {node_object.data_id_lineage.data_id.push(data_id)}
+					}
+										
+
 					self.continue_step2(user_id, data_id, node_name, parents_same, previous_object, node_object, parents, auth_data_id, node_sent_in, callback);
+					// previous_object = return_object.result; // keep a copy on how the node used to look
+					// node_object = JSON.parse(JSON.stringify(previous_object));
+
+					// if (debug == 1) console.log(JSON.parse(JSON.stringify(node_object)));
+
+					// // check to see existing parents are exacly like incoming parents
+					// parents_same = (previous_object.parents.length == parents.length) && previous_object.parents.every(function(element, index) {
+					// 	return element === parents[index];
+					// });
+					// if (data_id) data_id_plus.data_id = [data_id];
+					// else data_id_plus.data_id = [];
+
+					// node_object.data_id_lineage = data_id_plus;
+					// node_object.data_id = data_id;
+					// //if (data_id){node_object.data_id_lineage.data_id=[data_id]}else{node_object.data_id_lineage.data_id=[]}
+					// node_object.parents = parents; // set node_object.parents
+					// node_object.ancestors = parents; // gut ancestors, call to update_tree_lineage will replentish   
+					// node_object = self.add_date(hist_user_id, node_object);
+					// self.continue_step2(user_id, data_id, node_name, parents_same, previous_object, node_object, parents, auth_data_id, node_sent_in, callback);
 				} //user_id, data_id, node_name, parents_same, previous_object, node_object, parents, auth_data_id, node_sent_in, callback){
 				else {
 					callback(return_object);
@@ -1388,7 +1507,6 @@ var treeObject = {
 	// master_parents is a way to add yourself to an existing node (security master parent.data_id = portal_id)
 	// node_id: if null then create else edit
 	add_to_node_name_tree: function(user_id, portal_id, node_name, data_id, master_parents, tree_owner_id, node_id, target, parent_node_name, callback) {
-        console.log("Reached herer...... in add_to_node_name_tree fn ", user_id, portal_id, node_name, data_id, master_parents, tree_owner_id, node_id, target, parent_node_name);
 		//console.log({arguments:arguments})
 		if (debug == 2) console.log({
 			arguments: arguments
@@ -1419,9 +1537,6 @@ var treeObject = {
 		}
 
 		var data_id_plus = {};
-		//data_id_plus[portal_id]=[node_name];
-
-		//var return_object={error: error_definitions.error_not_authorized}; //=error_definitions.error_not_authorized;
 		var create_name;
 		if (debug == 2) console.log("before");
 		self.security_check(user_id, "add_to_node_name_tree", portal_id, function(isAuthorized) {
@@ -1468,44 +1583,35 @@ var treeObject = {
 	},
 	add_name_step2: function(user_id, portal_id, node_name, data_id, master_parents, tree_owner_id, node_id, data_id_plus, target, parent_node_name, callback) {
 		var return_object = {};
+		var node_id=null;
 		this.search_node_name_by_user_name(tree_owner_id, node_name, function(grand_object) { // see if a node name owned by tree_owner_id already exists
-			//console.log("Reachede>>>>>>>>>>>>>>>>>", grand_object);
 			if (debug == 2) console.log({
 				grand_object: grand_object
 			});
-			if (grand_object.error || target=="grand") { // if none there, then we can add a grandparent
-				// GRANDPARENT did NOT exist, we can create
+			if (grand_object.error || target=="grand") { 						// if none there or traget = grand, then we can add a grandparent
+				if (grand_object.result){node_id=grand_object.result._id}
 				var create_name = node_name; // only grand_parents have node_name
-				// we leave master_parents to what came in
-				// creating a new node_name grand_parent 
+				if (portal_id != data_id || portal_id != tree_owner_id) {return_object = error_definitions.error_data_portal};
+				
 				if (debug == 2) console.log({
 					portal_id: portal_id,
 					data_id: data_id,
-					tree_owner_id: tree_owner_id
+					tree_owner_id: tree_owner_id,
+					return_object: return_object
 				});
-				
-				if (portal_id != data_id || portal_id != tree_owner_id) {
-					return_object = {
-						error: error_definitions.error_data_portal
-					};
-				}
-				
-				if (debug == 2) console.log(return_object);
-				//if (debug == 2) debug = 1;
-				
+
 				if (!return_object.error) {
 					self.create_edit_node(tree_owner_id, node_id, data_id, master_parents, create_name, true, user_id, data_id_plus, callback);
 				} else {
 					callback(return_object);
 				}
-			} else {
-				// there was a grand parent                                                             
+			} else {																						// there was a grand parent                                                             
 				grand_object = grand_object.result;
 				// PARENT
 				// find parent > search tree grand_object._id where in portal id = data_id, 
 				// and grand.data_id (tree_owner_id) is the owner of that record
 				var creator_node_id = grand_object._id;
-				var authorizing_id = tree_owner_id; // grand_object.data_id;
+				var authorizing_id = tree_owner_id; 
 				var authorized_id;
 				var parent_node_name;
 				if (tree_owner_id == portal_id) {
@@ -1520,7 +1626,6 @@ var treeObject = {
 					});
 
 					if (portal_id == tree_owner_id && (!parent_object.result || target=="parent")) { 
-						//data_id_plus[portal_id] = [node_name];						// if same then can be a parent  
 						 // if no parent then add // before we add, do a check?
 						if (parent_object.result) {
 							parent_object = parent_object.result;
@@ -1534,6 +1639,7 @@ var treeObject = {
 						if (portal_id != grand_object.data_id){
 							callback(error_definitions.error_data_portal);
 						} else {
+							//debug=1;
 							self.create_edit_node(grand_object.data_id, node_id, data_id, master_parents, create_name, true, user_id, data_id_plus, callback);
 						}
 					} else { // if portal_id!=tree_owner_id find parent so we can find child
@@ -1541,41 +1647,45 @@ var treeObject = {
 							
 							parent_object = parent_object.result
 							parent_id = parent_object._id; // set to search inside parent id // see if duplicate child data_id is being added // find child > search tree parent_id where in data_id = data_id,  // and parent_object.data_id is the owner of that record
-							
-							if (debug == 2) console.log(parent_object.data_id);
-							if (debug == 2) console.log(data_id);
-							
 							creator_node_id = parent_object._id;
 							authorizing_id = parent_object.data_id;
 							authorized_id = data_id;
 							parent_node_name = parent_object.node_name;
+
+							if (debug == 2) console.log(parent_object.data_id);
+							if (debug == 2) console.log(data_id);
 							
 							self.search_node_name_data_lineage(creator_node_id, authorizing_id, authorized_id, node_name, false, parent_node_name, function(child_object) {
 								if (debug == 2) console.log({
 									child_object: child_object
 								});
 								
-								if ( !child_object.result || (child_object.result.length == 0 ) )// || target=="child") 
-								{ // child did not exist, then add
-									master_parents = [parent_id]; // set right master parent id // create name will be blank
-									if (portal_id == data_id || portal_id != parent_object.data_id) {
+								// no need to check for target child ie default
+								if (!child_object.result) // ||  target=="child") // child did not exist or target = child, then add/edit
+								{ 
+									master_parents = [parent_id]; // set right master parent id.  create name will be blank
+									if (child_object.result){
+										node_id=child_object.result._id;
+									}
+									if (portal_id == data_id || portal_id != parent_object.data_id) {  
 										return_object = error_definitions.error_data_portal;
-									} //++ above?                       
+									}                     
 									self.create_edit_node(parent_object.data_id, node_id, data_id, master_parents, create_name, true, user_id, data_id_plus, callback);
 								}
 								else
-								{ // CHILD existed, see if instance exists	
+								{ 	// CHILD existed, only master parents or data_id plus could be changing.
 									child_object = child_object.result;
-									if (child_object.ancestors.indexOf(grand_object._id) < 0) { // if child existed but intance did not
-										master_parents = self.arrayUnique(child_object.parents.concat(parent_id));
-										if (debug == 2) console.log({
-											master_parents: master_parents
-										});
-										self.create_edit_node(parent_object.data_id, child_object._id, data_id, master_parents, create_name, true, user_id, data_id_plus, callback);
-									} else {
-										return_object = error_definitions.error_duplicate; // child existed exactly then duplicate
-										callback(return_object);
-									}
+									master_parents = self.arrayUnique( child_object.parents.concat(parent_id));
+									self.create_edit_node(parent_object.data_id, child_object._id, data_id, master_parents, create_name, true, user_id, data_id_plus, callback);
+
+									// if (child_object.ancestors.indexOf(grand_object._id) < 0) { // if child existed but intance did not
+									// 	master_parents = self.arrayUnique(child_object.parents.concat(parent_id));
+									// 	if (debug == 2) console.log({master_parents: master_parents});
+									// 	self.create_edit_node(parent_object.data_id, child_object._id, data_id, master_parents, create_name, true, user_id, data_id_plus, callback);
+									// } else {
+									// 	return_object = error_definitions.error_duplicate; // child existed exactly then duplicate
+									// 	callback(return_object);
+									// }
 								} 
 							});
 						} else {
@@ -1616,9 +1726,8 @@ var treeObject = {
 				} else {
 					self.search_node_name_by_user_name(tree_owner_id, node_name, function(return_object) {
 
-						if (debug == 2) console.log({
-							return_object
-						});
+						if (debug == 2) console.log({return_object});
+
 						if (return_object.result) { // if grand parent found
 							// grand.data_id = grand_user_id = tree_owner_id = portal_id = data_id
 							var grand_object = return_object.result;
@@ -1627,7 +1736,6 @@ var treeObject = {
 								(portal_id == grand_object.user_id && 
 								data_id == grand_object.data_id && 
 								portal_id == data_id))
-							// if data_id = portal = tree_owner_id = grand.user = grand.data
 							{
 								if (debug == 2) console.log(grand_object);
 								self.delete_node(portal_id, grand_object._id, user_id, callback); // only delete if ownership matches user_id, node_id
@@ -1636,8 +1744,8 @@ var treeObject = {
 								// and parent_user_id is the owner of that record 
 
 								var creator_node_id = grand_object._id;
-								var authorizing_id = tree_owner_id; // grand_object.data_id;
-								var authorized_id; //=portal_id;
+								var authorizing_id = tree_owner_id; 
+								var authorized_id; 
 
 								if (tree_owner_id == portal_id) {
 									authorized_id = data_id;
@@ -1646,9 +1754,8 @@ var treeObject = {
 								}
 								self.search_node_name_data_lineage(creator_node_id, authorizing_id, authorized_id, node_name, true, parent_node_name, function(return_object) {
 
-									if (debug == 2) console.log({
-										return_object
-									});
+									if (debug == 2) console.log({return_object});
+
 									if (return_object.result) {
 										var parent_object = return_object.result;
 										if (portal_id == tree_owner_id || target=="parent") {
@@ -1860,43 +1967,47 @@ var treeObject = {
 		});
 	},
 
-	// get records where data_id_linage[_id] & user_id = incoming _id & optional data_id= incoming user_id
-	get_data_id_linage: function(user_id, _id, filter, callback) {
-        callback({result: []});
-	},
 
-	// get user permissions based on portal (or accept) ie data_id_linage[portal_id] && user_id = portal_id
-	// get records where data_id_linage[page_id] in what user sends in & user_id = page_id
+	// get user permissions based on portal (or accept) ie data_id_lineage[portal_id] && user_id = portal_id
+	// get records where data_id_lineage[page_id] in what user sends in & user_id = page_id
 	get_page: function(user_id, portal_id, page_id, filter, callback) {
-		callback({result:[]});
-		// if (!filter) {var filter={}};
-		// self.get_data_id_linage(user_id, portal_id, filter, function(return_object){
-		// 	if (return_object.result){
-		// 		filter = return_object.result[0].data_lineage[portal_id];
-		// 		self.get_data_id_linage(null, portal_id, filter, function(return_object){
-		// 			if (return_object.result){
-		// 				var result_array=return_object.result;
-		// 				var temp = [];
-		// 				for (var each_record in return_array) {
-		// 					if (return_array[each_record].data_id) {
-		// 						temp.push(return_array[each_record].data_id);
-		// 					}
-		// 				}
-		// 				self.search_bulk(temp, callback);
-		// 			}
-		// 			else{
-		// 				callback(return_object);
-		// 			}
-		// 		})
-		// 	}
-		// 	else
-		// 	{
-		// 		callback(return_object);
-		// 	}
-
-		// })
+		if (!filter) {
+			var filter=null;	
+			if (debug==1) console.log("arrived to get page")															// if no user filter came in then get it
+			self.get_data_id_lineage(user_id, portal_id, filter, function(return_object){	// find where this user_id is in data_id owned by portal_id
+				if (debug==1) console.log(return_object)
+				if (return_object.result && return_object.result.length==1){
+					filter = return_object.result[0].data_id_lineage[portal_id];				// the permissions portal_id gave to this user_d
+					//if more than 1 then error
+					self.get_page2(page_id, filter, callback);
+				} else {
+					callback(return_object);
+				}	
+			})
+		} else {// if filter was sent in 
+			self.get_page2(page_id, filter, callback);
+		}
 	},
 
+	get_page2: function(page_id, filter, callback) {					// now go the right pages
+		if (debug==1) console.log({get_page2: filter})
+		self.get_data_id_lineage(null, page_id, filter, function(return_object){			// records owned system_id
+			if (debug==1) console.log(return_object)
+			if (return_object.result){
+				var return_array=return_object.result;
+				var temp = [];
+				for (var each_record in return_array) {
+					if (return_array[each_record].data_id) {
+						temp.push(return_array[each_record].data_id);
+					}
+				}
+				self.search_bulk(temp, callback);
+			}
+			else{
+				callback(return_object);
+			}
+		})
+	},
 	// ++we need to think further about secuirty -- this current simple version may have a hack arount it
 	// the more complex version would need to be re-written to handle 
 	security_check: function(user_id, fn_name, portal_id, callback) {

@@ -7,7 +7,8 @@
             database: { value:"", required:true },
             username : { value:"", required:true },
             password  : { value:"", required:true },
-            operation  : { value:"", required: true}
+            operation  : { value:"", required: true},
+            flag: {value: "", required: true}
         },
         inputs:1, 
         outputs:1,
@@ -20,20 +21,27 @@
 
 <script type="text/x-red" data-template-name="Tree View">
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-bookmark"></i> Host</label>
+        <label for="node-input-host"><i class="fa fa-bookmark"></i> Host</label>
         <input type="text" id="node-input-host" placeholder="Host">
     </div>
      <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> Database</label>
+        <label for="node-input-database"><i class="fa fa-tag"></i> Database</label>
         <input type="text" id="node-input-database" placeholder="Database">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-user"></i> Username</label>
+        <label for="node-input-username"><i class="fa fa-user"></i> Username</label>
         <input type="text" id="node-input-username" placeholder="Username">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-lock"></i> Password</label>
+        <label for="node-input-password"><i class="fa fa-lock"></i> Password</label>
         <input type="password" id="node-input-password" placeholder="Password">
+    </div>
+    <div class="form-row">
+        <label for="node-input-flag"><i class="fa fa-lock"></i> Partial Flag</label>
+        <select type="text" id="node-input-flag" style="width:68%;">
+            <option value="true">True</option>
+            <option value="false">False</option>
+        </select>
     </div>
    
 </script>
