@@ -489,7 +489,10 @@ var treeObject = {
 		if (environment=="nodered"){
 			var temp = {};
 			
-			temp[parent_user_id] = "$exists";
+			temp[parent_user_id] = {
+				"$in" : filter
+			};
+            
 			//data_id_lineage
 			var query = {
 				"selector": {
