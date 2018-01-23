@@ -1677,7 +1677,18 @@ var treeObject = {
 								}
 								else
 								{ 	// CHILD existed, only master parents or data_id plus could be changing.
-									child_object = child_object.result;
+									//child_object = child_object.result;
+									//master_parents = self.arrayUnique( child_object.parents.concat(parent_id));
+									//self.create_edit_node(parent_object.data_id, child_object._id, data_id, master_parents, create_name, true, user_id, data_id_plus, callback);
+                                    child_object = child_object.result;
+									data_id_plus = child_object.data_id_lineage;
+
+									if (!data_id_plus[portal_id]){data_id_plus[portal_id]=[];}
+									if (
+										data_id_plus[portal_id].indexOf(node_name) < 0)
+									{
+										data_id_plus[portal_id].push(node_name);
+									}
 									master_parents = self.arrayUnique( child_object.parents.concat(parent_id));
 									self.create_edit_node(parent_object.data_id, child_object._id, data_id, master_parents, create_name, true, user_id, data_id_plus, callback);
 
