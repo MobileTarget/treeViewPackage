@@ -13,6 +13,7 @@ module.exports = function(RED) {
 			username		= config.username,
 			password		= config.password,
 			partialFlag		= config.flag ;
+			isReset			= config.reset;
 			
 		//initalizing helper init method
 		treeViewHelper.init();
@@ -66,8 +67,10 @@ module.exports = function(RED) {
 			
 			// changeing true/false string to boolean value;
 			partialFlag = JSON.parse(partialFlag);
+			isReset		= JSON.parse(isReset);
 			
 			reset_db_new(partialFlag, function(return_object1){
+				console.log('return_object1', return_object1);
 				treeViewHelper.process_msg(action_array, function(return_object){
 					console.log(return_object);
 					msg.payload = return_object;
@@ -78,33 +81,45 @@ module.exports = function(RED) {
 		});
 		
 		function reset_db_new(partialFlag, callback){
-			var node_original = {};
+			var node_original = {}, nodes = [];
 			if (partialFlag) {
 				node_original = testData.node_original1;
 			} else {
 				node_original=Object.assign(testData.node_original1, testData.node_original2);
 			} 
 			// delete cloudant database
-			database.resetDatabase(function(obj){
-				if(obj.isReset){
-					//debugger;
-					nodes = [];
-					for (var each_record in node_original) {
-						if(node_original[each_record]){
-							nodes.push(node_original[each_record]);
+			
+			if(isReset){
+				database.resetDatabase(function(obj){
+					if(obj.isReset){
+						//debugger;
+						nodes = [];
+						for (var each_record in node_original) {
+							if(node_original[each_record]){
+								nodes.push(node_original[each_record]);
+							}
 						}
-					}
-					treeViewHelper.save_array(nodes, callback);
-				}else{
-					nodes = [];
-					for (let each in node_original) {
-						if(node_original[each]){
-							nodes.push(node_original[each]);
+						treeViewHelper.save_array(nodes, callback);
+					}else{
+						nodes = [];
+						for (let each in node_original) {
+							if(node_original[each]){
+								nodes.push(node_original[each]);
+							}
 						}
+						treeViewHelper.save_array(nodes, callback);
 					}
-					treeViewHelper.save_array(nodes, callback);
+				});
+			}else{
+				nodes = [];
+				for (var each_record in node_original) {
+					if(node_original[each_record]){
+						nodes.push(node_original[each_record]);
+					}
 				}
-			});
+				treeViewHelper.save_array(nodes, callback);
+			}
+			
 		}
 	}
 	
