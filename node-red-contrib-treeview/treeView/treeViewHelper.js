@@ -1945,7 +1945,7 @@ var treeObject = {
 	// get records where data_id_lineage[page_id] in what user sends in & user_id = page_id
 	get_page: function(user_id, portal_id, page_id, filter, callback) {
 		if (!filter) {
-			var filter=null;	
+			filter=null;	
 			if (debug==1) console.log("arrived to get page");													// if no user filter came in then get it
 			self.get_data_id_lineage(user_id, portal_id, filter, function(return_object){	// find where this user_id is in data_id owned by portal_id
 				if (debug==1) console.log(return_object);
@@ -1962,9 +1962,9 @@ var treeObject = {
 		}
 	},
 
-	get_page2: function(page_id, filter, callback) {					// now go the right pages
+	get_page2: function(page_id, filter, callback) {	// now go the right pages
 		if (debug==1) console.log({get_page2: filter});
-		self.get_data_id_lineage(null, page_id, filter, function(return_object){			// records owned system_id
+		self.get_data_id_lineage(null, page_id, filter, function(return_object){// records owned system_id
 			if (debug==1) console.log(return_object);
 			if (return_object.result){
 				var return_array=return_object.result;
