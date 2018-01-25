@@ -8,7 +8,6 @@ module.exports = function(RED) {
 		RED.nodes.createNode(this, config);
 
 		var node 			= this ,
-			host 			= config.host,
 			databaseName	= config.database,
 			username		= config.username,
 			password		= config.password,
@@ -20,11 +19,7 @@ module.exports = function(RED) {
 		database.init(databaseName, username, password);
 	
 		node.on('input', function(msg) {
-			if(_.isEmpty(host)){
-				msg.payload = `Host Url must be set to make ${node.type} node working.`;
-				node.send(msg);	
-			}
-			
+		
 			if(_.isEmpty(databaseName)){
 				msg.payload = `Database name must be set to make ${node.type} node working.`;
 				node.send(msg);	
@@ -72,16 +67,12 @@ module.exports = function(RED) {
 						node.send(msg);
 					});
 				});
-				msg.payload = `Comes inside the 'Test' operation. with partialFlag = ${partialFlag}`;
-				node.send(msg);
 			}else if( operation == "prod"){
 				treeViewHelper.process_msg(action_array, function(return_object){
 					console.log(return_object);
 					msg.payload = return_object;
 					node.send(msg);
 				});
-				msg.payload = `Comes inside the 'Prod' operation. with partialFlag = ${partialFlag}`;
-				node.send(msg);
 			}else{
 				msg.payload = "Un-specified operation for Tree view node.";
 				node.send(msg);
