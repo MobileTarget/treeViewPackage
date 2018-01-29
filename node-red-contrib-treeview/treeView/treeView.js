@@ -10,7 +10,7 @@ module.exports = function(RED) {
 			databaseName	= config.database,
 			username		= config.username,
 			password		= config.password,
-			partialFlag		= config.flag ;
+			partialFlag		= config.flagMode ;
 			operation		= config.operation;
 			
 		//initalizing helper init method
@@ -31,23 +31,6 @@ module.exports = function(RED) {
 				return false;
 			}
 			
-			if(_.isEmpty(partialFlag)){
-				msg.payload = `'partialFlag' must not empty to make ${node.type} node working properly.`;
-				node.send(msg);
-				return false;
-			}
-			
-			if(_.isEmpty(msg.node_original1) ){
-				msg.payload = `'node_original1' should not empty to make ${node.type} node working properly.`;
-				node.send(msg);
-				return false;
-			}
-			
-			if(_.isEmpty(msg.node_original2) ){
-				msg.payload = `'node_original2' should not empty to make ${node.type} node working properly.`;
-				node.send(msg);
-				return false;
-			}
 			
 			var localMsg = {},
 				action_array = [],
@@ -74,10 +57,12 @@ module.exports = function(RED) {
 				}
 			}
 		
-			// changeing true/false string to boolean value;
-			partialFlag = JSON.parse(partialFlag);
+			
 			
 			if(operation == "test"){
+				// changeing true/false string to boolean value;
+				partialFlag = JSON.parse(config.flagMode);
+				
 				reset_db_new(msg, true, partialFlag, function(return_object1){
 					console.log('return_object1', return_object1);
 					treeViewHelper.process_msg(action_array, function(return_object){
@@ -87,14 +72,14 @@ module.exports = function(RED) {
 					});
 				});
 			}else if( operation == "prod"){
-				reset_db_new(msg, false, partialFlag, function(return_object1){
-					console.log('return_object1', return_object1);
+				//reset_db_new(msg, false, partialFlag, function(return_object1){
+					//console.log('return_object1', return_object1);
 					treeViewHelper.process_msg(action_array, function(return_object){
-						console.log(return_object);
+						console.log(JSON.stringify(return_object));
 						msg.payload = return_object;
 						node.send(msg);
 					});
-				});
+				//});
 			}else{
 				msg.payload = "Un-specified operation for Tree view node.";
 				node.send(msg);
