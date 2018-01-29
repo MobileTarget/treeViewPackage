@@ -40,21 +40,13 @@
         </select>
     </div>
     
-    <div class="form-row node-input-flag" style="display: none;">
+    <div class="form-row node-input-flag">
         <label for="node-input-flag"><i class="fa fa-flag-checkered"></i> Partial Flag</label>
         <select type="text" id="node-input-flag" style="width:68%;">
             <option value="true">True</option>
             <option value="false">False</option>
         </select>
     </div>
-    
-    <script>
-        $("#node-input-operation").change(function() {
-            var id = $("#node-input-operation option:selected").val();
-            if (id == "test") $(".node-input-flag").show();
-            else $(".node-input-flag").hide();
-        });
-    </script>
    
 </script>
  
