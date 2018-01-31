@@ -190,20 +190,6 @@ var treeObject = {
 				}
 			};
 			db.searchRecordsFromDatabase(query, function(return_object){
-				//var return_object = {
-				//	result: []
-				//}; // error_definitions.error_empty; // theoretically impossible 
-				//var return_array = [];
-				//for (var each_record in read_array) {
-				//	if(read_array[each_record]){
-				//		if (debug == 2) console.log(all_records[read_array[each_record]]);
-				//		return_array.push(JSON.parse(JSON.stringify(all_records[read_array[each_record]])));
-				//	}
-				//}
-				//return_object = {
-				//	"result": return_array
-				//};
-				//callback(return_object);
 				if(return_object){
 					callback({result: return_object});
 				}else{
@@ -397,13 +383,17 @@ var treeObject = {
 				};
 			
 			if(parent_flag){
-				temp[authorizing_id] = "$exists";
+				temp[authorizing_id] = {
+                    "$exists": true
+                };
 				obj.data_id_lineage = temp ;
 				obj.node_name = node_name;
 				query1.selector.$not = obj ;
 				query = query1 ;
 			}else{
-				temp[authorizing_id] = "$exists";
+				temp[authorizing_id] = {
+                    "$exists": true
+                };
 				obj.data_id_lineage = temp ;
 				obj.node_name = node_name;
 				query2.selector.$not = obj ;
@@ -460,7 +450,164 @@ var treeObject = {
 	},
 
 	// get records where data_id_lineage[parent_user_id] & user_id = parent_user_id & data_id= child_user_id
-	get_data_id_lineage: function(child_data_id, parent_user_id, filter, callback) {
+//	get_data_id_lineage: function(child_data_id, parent_user_id, filter, callback) {
+//		if (environment=="nodered"){
+//			var temp = {};
+//			
+//			temp[parent_user_id] = {
+//				"$in" : filter
+//			};
+//            
+//			//data_id_lineage
+//			var query = {
+//				"selector": {
+//					"table": "node",
+//					"user_id": parent_user_id,
+//					"data_id_lineage": temp 
+//				}
+//			};
+//			
+//			if(!child_data_id) {
+//				query.selector.data_id = child_data_id;
+//			}
+//			
+//            
+//            console.log(">>>>>>>>>>>>>>>>>> inside get_data_id_lineage fn", JSON.stringify(query) );
+//			db.searchRecordsFromDatabase(query, function(return_object){
+//				if (debug == 2) {
+//					console.log(arguments);
+//				}
+//				
+//				if( Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length == 1){
+//					callback({ "result": return_object[0] });	
+//				}else{
+//					callback(error_definitions.error_empty);
+//				}
+//			});
+//		}
+//		else {
+//			if (debug==1) console.log({get_data_id_lineage: filter});
+//			var return_object = {};
+//			var return_array = [];
+//			var found = false;
+//			for (var each_record in node_records) {
+//				if ((node_records[each_record].table == "node") &&
+//					(!child_data_id ||  node_records[each_record].data_id == child_data_id) &&
+//					(node_records[each_record].data_id_lineage && node_records[each_record].data_id_lineage[parent_user_id]) &&
+//					(node_records[each_record].user_id == parent_user_id)){
+//
+//					if (filter && filter.length!=0){
+//						if (debug==1) console.log(node_records[each_record].data_id_lineage);
+//						for (var each_item in filter){
+//							if (debug==1) console.log(filter[each_item]);
+//							if (node_records[each_record] &&
+//								node_records[each_record].data_id_lineage[system_id].indexOf(filter[each_item])>-1){
+//								if (debug==1) console.log("found");
+//								found=true; 
+//								break;
+//						}
+//						}
+//					}
+//					if (!filter || found) {
+//						return_array.push(JSON.parse(JSON.stringify(node_records[each_record])));
+//						if (debug==1) console.log(return_array);
+//					}
+//				}
+//			}
+//			if (debug==1) console.log(return_array);
+//			if (return_array.length==0){
+//				return_object=error_definitions.error_empty;
+//			} else {
+//				return_object = {"result": return_array};
+//			}
+//			callback(return_object);
+//		}
+//	},
+    get_user_filter: function(child_data_id, parent_user_id, filter, callback) {
+        /**
+         *  if ((node_records[each_record].table == "node") &&
+            (!child_data_id ||  node_records[each_record].data_id == child_data_id) &&
+            (node_records[each_record].data_id_lineage && node_records[each_record].data_id_lineage[parent_user_id]) &&
+            (node_records[each_record].user_id == parent_user_id)){
+            note, filter is of no importance in this call
+            as written the caller is only interested in the first element of the array, ok for now
+            if not found then return empty error
+        *
+        *
+        **/
+		if (environment=="nodered"){
+			var temp = {};
+			
+			temp[parent_user_id] = {
+                "$exists": true
+            };
+            
+			//data_id_lineage
+			var query = {
+				"selector": {
+					"table": "node",
+					"user_id": parent_user_id,
+                    "data_id_lineage": temp,
+                    "data_id": child_data_id
+				}
+			};
+           
+			//if(!child_data_id) query.selector.data_id = child_data_id;			
+            
+            console.log(">>>>>>>>>>>>>>>> inside the get_user_filter Fn", JSON.stringify(query) );
+			db.searchRecordsFromDatabase(query, function(return_object){
+				if (debug == 2) {
+					console.log(arguments);
+				}
+				
+				if( Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length == 1){
+					callback({ "result": return_object[0] });	
+				}else{
+					callback(error_definitions.error_empty);
+				}
+			});
+		}
+		else {
+			if (debug==1) console.log({get_data_id_lineage: filter});
+			var return_object = {};
+			var return_array = [];
+			var found = false;
+			for (var each_record in node_records) {
+				if ((node_records[each_record].table == "node") &&
+					(!child_data_id ||  node_records[each_record].data_id == child_data_id) &&
+					(node_records[each_record].data_id_lineage && node_records[each_record].data_id_lineage[parent_user_id]) &&
+					(node_records[each_record].user_id == parent_user_id)){
+
+					if (filter && filter.length!=0){
+						if (debug==1) console.log(node_records[each_record].data_id_lineage);
+						for (var each_item in filter){
+							if (debug==1) console.log(filter[each_item]);
+							if (node_records[each_record] &&
+                                node_records[each_record].data_id_lineage[system_id].indexOf(filter[each_item])>-1){
+                                if (debug==1) console.log("found");
+                                found=true; 
+                                break;
+                            }
+						}
+					}
+					if (!filter || found) {
+						return_array.push(JSON.parse(JSON.stringify(node_records[each_record])));
+						if (debug==1) console.log(return_array);
+					}
+				}
+			}
+			if (debug==1) console.log(return_array);
+			if (return_array.length==0){
+				return_object=error_definitions.error_empty;
+			} else {
+				return_object = {"result": return_array};
+			}
+			callback(return_object);
+		}
+	},
+    
+    	// get records where data_id_lineage[parent_user_id] & user_id = parent_user_id & data_id= child_user_id
+	get_details_based_on_filter: function(child_data_id, parent_user_id, filter, callback) {
 		if (environment=="nodered"){
 			var temp = {};
 			
@@ -472,15 +619,17 @@ var treeObject = {
 			var query = {
 				"selector": {
 					"table": "node",
-					"user_id": parent_user_id,
-					"data_id_lineage": temp 
+					"user_id": parent_user_id
 				}
 			};
 			
-			if(!child_data_id) {
-				query.selector.data_id = child_data_id;
-			}
+			if(filter) query.selector.data_id_lineage = temp;
+           
+			if(!child_data_id) query.selector.data_id = child_data_id;
+            
 			
+            console.log(">>>>>>>>>>>>>>>> inside the get_details_based_on_filter Fn", JSON.stringify(query) );
+            
 			db.searchRecordsFromDatabase(query, function(return_object){
 				if (debug == 2) {
 					console.log(arguments);
@@ -510,10 +659,10 @@ var treeObject = {
 							if (debug==1) console.log(filter[each_item]);
 							if (node_records[each_record] &&
 								node_records[each_record].data_id_lineage[system_id].indexOf(filter[each_item])>-1){
-								if (debug==1) console.log("found");
-								found=true; 
-								break;
-						}
+                                    if (debug==1) console.log("found");
+                                    found=true; 
+                                    break;
+                            }
 						}
 					}
 					if (!filter || found) {
@@ -522,6 +671,7 @@ var treeObject = {
 					}
 				}
 			}
+            
 			if (debug==1) console.log(return_array);
 			if (return_array.length==0){
 				return_object=error_definitions.error_empty;
@@ -531,7 +681,7 @@ var treeObject = {
 			callback(return_object);
 		}
 	},
-
+    
 	// search my node_id tree where node_id appear in ancestors (i.e. children, grand_children, etc)
 	// data_id must match, and node_name_user_id is the owner of that record
 	//  node_name_user_id  optional, but if sent in must match each records user_id i.e. "my tree"
@@ -1947,7 +2097,7 @@ var treeObject = {
 		if (!filter) {
 			filter=null;	
 			if (debug==1) console.log("arrived to get page");													// if no user filter came in then get it
-			self.get_data_id_lineage(user_id, portal_id, filter, function(return_object){	// find where this user_id is in data_id owned by portal_id
+			self.get_user_filter(user_id, portal_id, filter, function(return_object){		// find where this user_id is in data_id owned by portal_id
 				if (debug==1) console.log(return_object);
 				if (return_object.result && return_object.result.length==1){
 					filter = return_object.result[0].data_id_lineage[portal_id];				// the permissions portal_id gave to this user_d
@@ -1964,7 +2114,7 @@ var treeObject = {
 
 	get_page2: function(page_id, filter, callback) {	// now go the right pages
 		if (debug==1) console.log({get_page2: filter});
-		self.get_data_id_lineage(null, page_id, filter, function(return_object){// records owned system_id
+		self.get_details_based_on_filter(null, page_id, filter, function(return_object){// records owned system_id
 			if (debug==1) console.log(return_object);
 			if (return_object.result){
 				var return_array=return_object.result;
