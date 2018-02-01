@@ -50,15 +50,11 @@ module.exports = function(RED) {
 					localMsg = {};
 					localMsg.fn_name = record.fn_name;
 					localMsg.payload = payload;
-					//console.log(count);
-					//console.log(localMsg);
 					action_array.push(localMsg);	
 					count++;
 				}
 			}
-		
-			
-			
+					
 			if(operation == "test"){
 				// changeing true/false string to boolean value;
 				partialFlag = JSON.parse(config.flagMode);
@@ -72,14 +68,11 @@ module.exports = function(RED) {
 					});
 				});
 			}else if( operation == "prod"){
-				//reset_db_new(msg, false, partialFlag, function(return_object1){
-					//console.log('return_object1', return_object1);
-					treeViewHelper.process_msg(action_array, function(return_object){
-						console.log(JSON.stringify(return_object));
-						msg.payload = return_object;
-						node.send(msg);
-					});
-				//});
+				treeViewHelper.process_msg(action_array, function(return_object){
+					console.log(JSON.stringify(return_object));
+					msg.payload = return_object;
+					node.send(msg);
+				});
 			}else{
 				msg.payload = "Un-specified operation for Tree view node.";
 				node.send(msg);
@@ -88,6 +81,7 @@ module.exports = function(RED) {
 		
 		function reset_db_new(msg, isReset, partialFlag, callback){
 			var node_original = {}, nodes = [];
+			partialFlag = partialFlag || true ;
 			
 			if (partialFlag) {
 				node_original = msg.node_original1;
