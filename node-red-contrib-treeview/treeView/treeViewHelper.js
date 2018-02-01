@@ -542,7 +542,7 @@ var treeObject = {
                 "$exists": true
             };
             
-			//data_id_lineage
+            //data_id_lineage
 			var query = {
 				"selector": {
 					"table": "node",
@@ -560,8 +560,8 @@ var treeObject = {
 					console.log(arguments);
 				}
 				
-				if( Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length == 1){
-					callback({ "result": return_object[0] });	
+				if( Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length > 0){
+					callback({ "result": return_object });	
 				}else{
 					callback(error_definitions.error_empty);
 				}
@@ -597,10 +597,10 @@ var treeObject = {
 				}
 			}
 			if (debug==1) console.log(return_array);
-			if (return_array.length==0){
-				return_object=error_definitions.error_empty;
+			if (Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length > 0){
+                return_object = {"result": return_array};
 			} else {
-				return_object = {"result": return_array};
+				return_object=error_definitions.error_empty;
 			}
 			callback(return_object);
 		}
@@ -611,7 +611,9 @@ var treeObject = {
 		if (environment=="nodered"){
 			var temp = {};
 			
-			temp[parent_user_id] = {
+            temp[parent_user_id] = {"$exists": true};
+            
+			temp[system_id] = {
 				"$in" : filter
 			};
             
@@ -625,7 +627,7 @@ var treeObject = {
 			
 			if(filter) query.selector.data_id_lineage = temp;
            
-			if(!child_data_id) query.selector.data_id = child_data_id;
+			if(child_data_id) query.selector.data_id = child_data_id;
             
 			
             console.log(">>>>>>>>>>>>>>>> inside the get_details_based_on_filter Fn", JSON.stringify(query) );
@@ -635,12 +637,13 @@ var treeObject = {
 					console.log(arguments);
 				}
 				
-				if( Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length == 1){
-					callback({ "result": return_object[0] });	
+				if( Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length > 0 ){
+					callback({ "result": return_object });	
 				}else{
 					callback(error_definitions.error_empty);
 				}
 			});
+
 		}
 		else {
 			if (debug==1) console.log({get_data_id_lineage: filter});
@@ -673,7 +676,7 @@ var treeObject = {
 			}
             
 			if (debug==1) console.log(return_array);
-			if (return_array.length==0){
+			if (Object.prototype.toString.call(return_object) == "[object Array]" && return_object.length > 0){
 				return_object=error_definitions.error_empty;
 			} else {
 				return_object = {"result": return_array};
