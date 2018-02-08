@@ -987,6 +987,7 @@ var treeObject = {
 		return return_object;
 	},
 	update_tree_lineage: function(tree_array, external_object, mode, add_object, previous_object, auth_data_id) {
+        console.log(">>>>>>>>>>>>>>>>>> inside update_tree_lineage ", add_object);
 		var history_object = add_object.history[add_object.history.length - 1], // get last element of the array
 			update_records = [],
 			delete_records = [],
@@ -1843,7 +1844,9 @@ var treeObject = {
 		if (!data_id) {
 			return_object = error_definitions.error_data_id;
 		} // data_id must exist
-		this.security_check(user_id, "delete_from_node_name_tree", portal_id, function(isAuthorized) {
+        
+       // console.log("this>>>>>>>>>>>>", self);
+		self.security_check(user_id, "delete_from_node_name_tree", portal_id, function(isAuthorized) {
 			if (!return_object.error && isAuthorized) {
 				if (debug == 2) console.log("past security");
 				if (!node_name && node_id) {
@@ -1897,8 +1900,10 @@ var treeObject = {
 												if (debug == 2) console.log({
 													return_object
 												});
-												if (!return_object.result || target=="child") 
+												//if (!return_object.result || target=="child") //changed on 07/022018 when trying to implement code as api-endpoit for app.
+                                                if (!return_object.result) 
 												{
+                                                    console.log("Comes in this case before going to return error >>>>>>>>>", !return_object.result, target);
 													callback(error_definitions.error_empty);
 												}
 												else

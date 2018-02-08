@@ -121,12 +121,9 @@ module.exports = function(RED) {
 				}
 				treeViewHelper.save_array(nodes, callback);
 			}
-			
 		}
 	}
 	
 	//Register function to Node-red nodes
 	RED.nodes.registerType("Tree View", treeView);
-	
 };
-
