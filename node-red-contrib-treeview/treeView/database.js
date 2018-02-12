@@ -152,6 +152,7 @@ var db = {
     },
     searchNodeById: function(id, callback){
         var url = `${this.databaseUrl}/${id}`, self = this;
+       // console.log(">>>>>>>>>>> inside searchNodeById database method", url);
         this.httpRequest(url, "GET", null, function(data, status){
             self.sendResponse(data, status, 'getById', callback);
         });

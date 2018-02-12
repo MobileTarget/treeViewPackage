@@ -28,11 +28,13 @@ var treeObject = {
             }else if(msg.fn_name == "get_node_name_tree"){
                 msg.fn_name = self.get_node_name_tree;
             }else if(msg.fn_name == "delete_from_node_name_tree"){
+                //console.log("Comes in this case where to delete delete_from_node_name_tree");
                 msg.fn_name = self.delete_from_node_name_tree;
             }else if(msg.fn_name == "get_page"){
                 msg.fn_name = self.get_page;
             }else {
                 console.log("Un-expacted function .....");
+                callback(null, error_definitions.error_empty);
                 return false;
             }
             
@@ -102,7 +104,9 @@ var treeObject = {
 
 	search_node_id: function(user_id, node_id, callback) {
 		if (environment == "nodered") {
+            //console.log("comes in search_node_id method with node-red enviornment........");
 			db.searchNodeById(node_id, function(data){
+                console.log("comes in search_node_id method with node-red enviornment........", data);
 				var node_object = data;
 				if (node_object) {
 					if ((user_id == null || user_id == "") || node_object.user_id == user_id) {
@@ -1542,36 +1546,43 @@ var treeObject = {
 		if (!hist_user_id) {
 			hist_user_id = user_id;
 		}
+        
 		var data_id;
 		var add_object = {};
 		if (user_id == "") {
 			user_id = null;
 		}
+        //console.log("herer>>>>>>>>>>", user_id, node_id);
 		this.search_node_id(user_id, node_id, function(return_object) {
+            //console.log("herer>>>>>>>>>>", return_object);
 			if (debug == 1) console.log(JSON.parse(JSON.stringify(return_object)));
 			if (return_object.result) // node has to exist in order to delete
 			{
 				add_object = return_object.result;
 				data_id = add_object._id;
-				self.search_data_id(data_id, function(return_object) // see if node is a data_id anyplace
-					{
-						if (return_object.result) {
-							callback(error_definitions.error_data_id);
-						} else {
-							var previous_object = JSON.parse(JSON.stringify(add_object)); // previous record is a "copy" of what we read in
-							add_object = self.add_date(hist_user_id, add_object); // for the records that are just updated
-							add_object.data_id = null;
-							add_object.parents = [];
-							add_object.data_id_lineage = {};
-							add_object.data_id_lineage.data_id = [];
-							add_object.ancestors = [];
-							add_object._id = null;
-							self.process_tree(previous_object, "del", add_object, function(return_object1) {
-								callback(return_object1);
-							});
-						}
-					});
-			}
+                
+                //console.log(">>>>>>>>>>>>>>>>>> before 2nd searchId", data_id);
+				self.search_data_id(data_id, function(return_object){ // see if node is a data_id anyplace
+                    //console.log("2nd search result >>>>>><<<<<<<", return_object);
+                    if (return_object.result) {
+                        var previous_object = JSON.parse(JSON.stringify(add_object)); // previous record is a "copy" of what we read in
+                        add_object = self.add_date(hist_user_id, add_object); // for the records that are just updated
+                        add_object.data_id = null;
+                        add_object.parents = [];
+                        add_object.data_id_lineage = {};
+                        add_object.data_id_lineage.data_id = [];
+                        add_object.ancestors = [];
+                        add_object._id = null;
+                        self.process_tree(previous_object, "del", add_object, function(return_object1) {
+                            callback(return_object1);
+                        });
+                    } else {
+                        callback(error_definitions.error_data_id);
+                    }
+                });
+			}else{
+                callback(error_definitions.error_delete_error);
+            }
 		});
 	},
 	/**
@@ -1836,6 +1847,8 @@ var treeObject = {
 	//                        x     =    Child
 	// &&&&& callback processing not done
 	delete_from_node_name_tree: function(user_id, portal_id, node_name, data_id, tree_owner_id, node_id, target, parent_node_name, callback) {
+        //console.log("comes in delete method >>> ", user_id, portal_id, node_name, data_id, tree_owner_id, node_id, target, parent_node_name);
+        //debug = 2 ;
 		var data_id_plus = {};
 		if (debug == 2) console.log({
 			arguments: arguments
@@ -1871,7 +1884,7 @@ var treeObject = {
 							} else { // check to see if parent
 								// find parent > search tree grand_parent_id where in portal_id = data_id, 
 								// and parent_user_id is the owner of that record 
-
+                                if (debug == 2) console.log("Comes in else case111111 ......");
 								var creator_node_id = grand_object._id;
 								var authorizing_id = tree_owner_id; 
 								var authorized_id; 
@@ -1884,19 +1897,23 @@ var treeObject = {
 								self.search_node_name_data_lineage(creator_node_id, authorizing_id, authorized_id, node_name, true, parent_node_name, function(return_object) {
 
 									if (debug == 2) console.log({return_object});
-
+                                    if (debug == 2) console.log("Comes in else 22222222222 ......");
+                                    
 									if (return_object.result) {
 										var parent_object = return_object.result;
 										if (portal_id == tree_owner_id || target=="parent") {
 											if (debug == 2) console.log({
 												return_object
 											});
+                                            
+                                            //console.log(">?>>>>>>>>>>>>>>>");
 											self.delete_node(parent_object.user_id, parent_object._id, user_id, callback);
 										} else {
 											creator_node_id = parent_object._id;
 											authorizing_id = parent_object.data_id;
 											authorized_id = data_id;
 											self.search_node_name_data_lineage(creator_node_id, authorizing_id, authorized_id, node_name, false, parent_node_name, function(return_object) {
+                                                if (debug == 2) console.log("Comes in else case333333333 ......");
 												if (debug == 2) console.log({
 													return_object
 												});
@@ -1930,10 +1947,14 @@ var treeObject = {
 												}
 											});
 										}
-									}
+									}else{
+                                        callback(error_definitions.error_data_id);
+                                    }
 								});
 							}
-						}
+						}else{
+                            callback(error_definitions.error_data_id);
+                        }
 					}); // search for grand parent
 				}
 			} else {
@@ -2156,20 +2177,34 @@ var treeObject = {
 	},
 	search_data_id: function(data_id, callback) {
 		var return_object;
-		for (var each_record in node_records) {
-			if (node_records[each_record].data_id == data_id) {
-				var newObject = JSON.parse(JSON.stringify(node_records[each_record]));
-				return_object = {
-					"result": newObject
-				};
-				break;
-			}
-		}
-		if (return_object) {
-			callback(return_object);
+	
+		if (environment == "nodered") {
+			db.searchNodeById(data_id, function(data){
+				var node_object = data;
+				if (node_object) {
+					var newObject = JSON.parse(JSON.stringify(node_object));
+					callback({"result": newObject});
+				} else {
+					callback(error_definitions.error_empty);
+				}
+			});
 		} else {
-			callback(error_definitions.error_empty);
-		}
+            
+            for (var each_record in node_records) {
+                if (node_records[each_record].data_id == data_id) {
+                    var newObject = JSON.parse(JSON.stringify(node_records[each_record]));
+                    return_object = {
+                        "result": newObject
+                    };
+                    break;
+                }
+            }
+            if (return_object) {
+                callback(return_object);
+            } else {
+                callback(error_definitions.error_empty);
+            }
+        }
 	}
 };
 

@@ -68,6 +68,7 @@ module.exports = function(RED) {
 					});
 				});
 			}else if( operation == "prod"){
+				//console.log("Comes here before going to treeHelper.process_msg");
 				treeViewHelper.process_msg(action_array, function(return_object){
 					console.log(JSON.stringify(return_object));
 					msg.payload = return_object;
